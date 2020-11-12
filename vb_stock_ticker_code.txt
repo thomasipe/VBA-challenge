@@ -1,0 +1,117 @@
+
+Sub StockPrices()
+  ' Loop through all sheets
+  For Each ws In Worksheets
+Debug.Print ws.Range("J2").Value
+
+
+'Set a variable to hold the ticker symbol
+Dim ticker As String
+
+'Set a variable to hold the ticker date
+Dim ticker_date As Long
+
+
+'Set a variable to hold the year open price
+Dim OpenPrice As Double
+'Set a variable to hold the year close price
+Dim ClosePrice As Double
+
+' Keep Track of the total Volume
+Dim TotalVolume As Double
+TotalVolume = 0
+
+'Keep Track of the location for each stock ticker in the summary table
+  Dim Summary_Table_Row As Integer
+  Summary_Table_Row = 2
+
+' Find the last row of each worksheet
+        
+Dim lastRowTicker As Long
+lastRowTicker = ws.Cells(Rows.Count, "A").End(xlUp).Row
+
+'Set the header names for the summary columns
+ws.Range("J1").Value = "Ticker"
+ws.Range("K1").Value = "Yearly Change"
+ws.Range("L1").Value = "Pct Change"
+ws.Range("M1").Value = "Volume"
+
+'Set first openprice
+OpenPrice = ws.Cells(2, 3).Value
+
+'Loop through all of the rows
+For i = 2 To lastRowTicker
+
+ ' Check if we are still within the same ticker, if it is not...
+    If ws.Cells(i + 1, 1).Value <> ws.Cells(i, 1).Value Then
+
+      ' Set the Ticker Symbol
+      ticker = ws.Cells(i, 1).Value
+ 
+      'Set the Close Price
+      ClosePrice = ws.Cells(i, 6).Value
+
+      ' Add to the Total Volume
+      TotalVolume = TotalVolume + ws.Cells(i, 7).Value
+
+      ' Print the Ticker Symbol in the Summary Table
+      ws.Range("J" & Summary_Table_Row).Value = ticker
+       
+       'Print the yearly change
+       ws.Range("K" & Summary_Table_Row).Value = ClosePrice - OpenPrice
+       
+       'Set the cell color to red if negative, otherwise green
+       
+       If ws.Range("K" & Summary_Table_Row).Value < 0 Then
+        ws.Range("K" & Summary_Table_Row).Interior.ColorIndex = 3
+       Else: ws.Range("K" & Summary_Table_Row).Interior.ColorIndex = 4
+      End If
+       
+       'Print the PCT Change
+      
+     'Cant have a zero close price
+        If ClosePrice <> 0 Then
+            ws.Range("L" & Summary_Table_Row).Value = FormatPercent(1 - OpenPrice / ClosePrice)
+        Else: ws.Range("K" & Summary_Table_Row).Value = 0
+              ws.Range("L" & Summary_Table_Row).Value = 0
+        End If
+        
+      ' Print the Total Volume to the Summary Table
+      ws.Range("M" & Summary_Table_Row).Value = TotalVolume
+           
+       ' Autofit to display data
+      ws.Columns("A:G").AutoFit
+
+      ' Add one to the summary table row
+      Summary_Table_Row = Summary_Table_Row + 1
+      
+      ' Reset the Total Volume
+      TotalVolume = 0
+      
+'Debug.Print "*****           i = "; i; " ticker = "; ticker; " open = "; OpenPrice
+
+    ' If the cell immediately following a row is the same ticker...
+    Else
+
+    ' Set the Ticker Date
+     
+       ticker_date = ws.Cells(i, 2).Value
+       
+    ' Get the first open price for each ticker after the first one
+    
+          If ws.Cells(i - 1, 1).Value <> ws.Cells(i, 1).Value Then
+        'Set the Open Price
+           OpenPrice = ws.Cells(i, 3).Value
+        End If
+
+      ' Add to the TotalVolume
+      TotalVolume = TotalVolume + ws.Cells(i, 7).Value
+
+    End If
+
+
+  Next i
+
+Next ws
+Debug.Print "done"
+End Sub
